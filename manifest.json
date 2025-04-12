@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Ethiscan",
+  "version": "1.0",
+  "description": "A Chrome extension to scan Terms and Conditions pages and summarize how websites use personal data.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

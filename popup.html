@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethiscan - Privacy Analysis</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div id="container">
+        <h1>Ethiscan</h1>
+        <button id="analyze-button">Analyze Current Page</button>
+        <div id="summary" class="hidden">
+            <h2>Summary</h2>
+            <p id="privacy-rating"></p>
+            <div id="summary-details"></div>
+        </div>
+        <div id="detailed-view" class="hidden">
+            <h2>Detailed View</h2>
+            <div id="data-collection"></div>
+            <div id="data-sharing"></div>
+            <div id="data-selling"></div>
+            <div id="data-retention"></div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
