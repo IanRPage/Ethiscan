@@ -1,50 +1,65 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
+    font-family: sans-serif;
+    width: 300px; /* Adjust width as needed */
     padding: 10px;
-    width: 300px;
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 h1 {
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+p {
+    font-size: 0.9em;
+    margin-top: 0;
+    margin-bottom: 15px;
 }
 
 button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
     cursor: pointer;
-    width: 100%;
-    font-size: 16px;
+    margin-bottom: 15px;
 }
 
-button:hover {
-    background-color: #45a049;
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
-.summary {
-    margin-top: 15px;
+#loadingIndicator {
+    margin-bottom: 15px;
+    font-style: italic;
 }
 
-.category {
-    margin: 10px 0;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.rating {
-    font-weight: bold;
+#results {
+    text-align: left;
+    width: 100%; /* Make results take full width */
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
     margin-top: 10px;
 }
 
-.detailed-view {
+#results h2 {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    text-align: center;
+}
+#results h3 {
+    font-size: 1em;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+#error {
     margin-top: 15px;
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    padding: 5px;
-    border-radius: 5px;
+    font-weight: bold;
 }

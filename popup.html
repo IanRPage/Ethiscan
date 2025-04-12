@@ -1,27 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+    <title>Ethiscan</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ethiscan - Privacy Analysis</title>
-    <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <div id="container">
+    <div class="container">
         <h1>Ethiscan</h1>
-        <button id="analyze-button">Analyze Current Page</button>
-        <div id="summary" class="hidden">
-            <h2>Summary</h2>
-            <p id="privacy-rating"></p>
-            <div id="summary-details"></div>
+        <p>Analyze the ethics of this site's ToS & Privacy Policy.</p>
+        <button id="analyzeButton">Analyze</button>
+        <div id="loadingIndicator" style="display: none;">Analyzing...</div>
+        <div id="results" style="display: none;">
+            <h2>Analysis Results</h2>
+            <p><strong>Ethics Score:</strong> <span id="ethicsScore"></span>/10</p>
+            <h3>Summary:</h3>
+            <p id="analysisSummary"></p>
         </div>
-        <div id="detailed-view" class="hidden">
-            <h2>Detailed View</h2>
-            <div id="data-collection"></div>
-            <div id="data-sharing"></div>
-            <div id="data-selling"></div>
-            <div id="data-retention"></div>
-        </div>
+        <div id="error" style="display: none; color: red;"></div>
     </div>
     <script src="popup.js"></script>
 </body>
