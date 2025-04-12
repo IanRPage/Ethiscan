@@ -38,10 +38,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const extractedText = injectionResults[0].result;
                 console.log(`Extracted text length: ${extractedText.length}`);
                 if (extractedText.length < 100) { // Basic check for meaningful content
-                     console.warn("Extracted text seems too short.");
-                     // Optional: Send a warning back, or proceed anyway
-                     // sendResponse({ success: false, error: "Extracted text is very short. Is this the correct page?" });
-                     // return;
+                    console.warn("Extracted text seems too short.");
+                    // Optional: Send a warning back, or proceed anyway
+                    // sendResponse({ success: false, error: "Extracted text is very short. Is this the correct page?" });
+                    // return;
                 }
 
 
@@ -96,18 +96,51 @@ async function getApiKey() {
     });
 }
 
+async function parseGeneratedJSON(text) {
+    // Parse the JSON string within the generated text
+    try {
+        // Attempt to clean potential markdown code block fences
+        // Find the start and end of the JSON object within the text
+        const startIndex = text.indexOf('{');
+        const endIndex = text.lastIndexOf('}');
+
+        if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+            console.error("Could not find valid JSON object boundaries in text:", text);
+            throw new Error("Could not find JSON object in API response.");
+        }
+
+        // Extract the potential JSON string
+        const jsonString = text.substring(startIndex, endIndex + 1);
+
+        // Parse the extracted string
+        const resultJson = JSON.parse(jsonString);
+
+        if (typeof resultJson.score !== 'number' || typeof resultJson.summary !== 'string') {
+            console.error("Parsed JSON does not match expected format:", resultJson);
+            throw new Error("API response JSON format is incorrect.");
+        }
+        // console.log("Parsed analysis:", resultJson);
+        return resultJson; // { score: number, summary: string }
+
+    } catch (parseError) {
+        console.error("Failed to parse JSON from API response:", parseError, "Raw text:", text);
+        throw new Error("Failed to parse analysis JSON from API response.");
+    }
+
+}
+
 // Placeholder for Gemini API call
 async function analyzeTextWithGemini(text) {
     const apiKey = await getApiKey();
     // console.log(apiKey);
     if (!apiKey) { // Check if the key is falsy (empty string, null, undefined)
-         console.error("Gemini API Key not configured.");
-         throw new Error("API Key not configured. Please set it in the extension options.");
+        console.error("Gemini API Key not configured.");
+        throw new Error("API Key not configured. Please set it in the extension options.");
     }
 
     // Define the Gemini API endpoint (using gemini-pro model)
     // Ensure your API key has access to this model.
-    const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     // Construct the prompt asking for JSON output
     const prompt = `Analyze the following Terms of Service / Privacy Policy based on ethical considerations (data privacy, data usage scope, clarity, user rights, data sharing, fairness). Provide ONLY a JSON object with the keys "score" (numerical value 1-10) and "summary" (1-2 paragraph text). Do not include any other text or markdown formatting. JSON object:\n\nDocument Text:\n${text}`;
@@ -145,30 +178,13 @@ async function analyzeTextWithGemini(text) {
         // Extract the generated text containing the JSON
         // Structure might vary slightly based on API version/settings
         if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0] || !data.candidates[0].content.parts[0].text) {
-             console.error("Unexpected API response structure:", data);
-             throw new Error("Could not parse analysis from API response.");
+            console.error("Unexpected API response structure:", data);
+            throw new Error("Could not parse analysis from API response.");
         }
 
-        const generatedText = data.candidates[0].content.parts[0].text;
-        console.log("Raw API response text:", generatedText);
+        const rawGeneratedText = data.candidates[0].content.parts[0].text;
 
-        // Parse the JSON string within the generated text
-        try {
-            // Attempt to clean potential markdown code block fences
-            const cleanedJsonString = generatedText.replace(/^```json\s*|```$/g, '').trim();
-            const resultJson = JSON.parse(cleanedJsonString);
-
-            if (typeof resultJson.score !== 'number' || typeof resultJson.summary !== 'string') {
-                console.error("Parsed JSON does not match expected format:", resultJson);
-                throw new Error("API response JSON format is incorrect.");
-            }
-            console.log("Parsed analysis:", resultJson);
-            return resultJson; // { score: number, summary: string }
-
-        } catch (parseError) {
-            console.error("Failed to parse JSON from API response:", parseError, "Raw text:", generatedText);
-            throw new Error("Failed to parse analysis JSON from API response.");
-        }
+        return parseGeneratedJSON(rawGeneratedText);
 
     } catch (error) {
         console.error("Error calling Gemini API:", error);
