@@ -1,8 +1,19 @@
+/* General Styles */
 body {
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     width: 300px; /* Default width */
-    padding: 10px;
-    box-sizing: border-box; /* Include padding in width calculation */
+    min-height: 150px; /* Ensure minimum height */
+    padding: 15px;
+    box-sizing: border-box;
+    background-color: #f8f9fa; /* Light gray background */
+    color: #212529; /* Dark text */
+    font-size: 14px;
+    line-height: 1.5;
+    transition: width 0.3s ease-in-out; /* Smooth width transition */
+}
+
+body.expanded {
+    width: 500px; /* Expanded width */
 }
 
 .container {
@@ -12,59 +23,152 @@ body {
     text-align: center;
 }
 
+/* Headings and Text */
 h1 {
-    font-size: 1.2em;
-    margin-bottom: 5px;
+    font-size: 1.5em; /* Larger title */
+    margin-bottom: 10px;
+    color: #343a40; /* Slightly darker heading */
+    font-weight: 500;
 }
 
 p {
-    font-size: 0.9em;
+    font-size: 0.95em;
     margin-top: 0;
+    margin-bottom: 15px;
+    color: #495057; /* Softer text color */
+}
+
+/* Button Styles */
+button {
+    display: inline-block;
+    font-weight: 400;
+    color: #fff; /* White text */
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: #28a745; /* Bootstrap green */
+    border: 1px solid #28a745;
+    padding: 8px 16px; /* Adjusted padding */
+    font-size: 1em;
+    line-height: 1.5;
+    border-radius: 0.25rem; /* Rounded corners */
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     margin-bottom: 15px;
 }
 
-button {
-    padding: 10px 20px;
-    font-size: 1em;
-    cursor: pointer;
-    margin-bottom: 15px;
-    background-color: greenyellow;
+button:hover {
+    background-color: #218838; /* Darker green on hover */
+    border-color: #1e7e34;
+}
+
+button:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.5); /* Green focus glow */
 }
 
 button:disabled {
+    color: #fff;
+    background-color: #28a745;
+    border-color: #28a745;
+    opacity: 0.65;
     cursor: not-allowed;
-    opacity: 0.6;
 }
 
+/* Loading Indicator */
 #loadingIndicator {
     margin-bottom: 15px;
     font-style: italic;
+    color: #6c757d; /* Gray color */
 }
 
+/* Results Area */
 #results {
     text-align: left;
-    width: 100%; /* Make results take full width */
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
-    margin-top: 10px;
+    width: 100%;
+    border-top: 1px solid #dee2e6; /* Lighter border */
+    padding-top: 15px;
+    margin-top: 15px;
+    background-color: #fff; /* White background for results */
+    padding: 15px;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 #results h2 {
-    font-size: 1.1em;
-    margin-bottom: 5px;
+    font-size: 1.25em;
+    margin-bottom: 10px;
     text-align: center;
-}
-#results h3 {
-    font-size: 1em;
-    margin-top: 10px;
-    margin-bottom: 5px;
+    color: #343a40;
+    font-weight: 500;
 }
 
+#results p {
+    margin-bottom: 10px; /* Spacing for score/summary */
+    color: #212529;
+}
+
+#results strong {
+    color: #212529;
+}
+
+/* Details/Summary Dropdown */
+details {
+    margin-top: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    background-color: #fff;
+}
+
+summary {
+    padding: 10px 15px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    list-style: none; /* Remove default marker */
+    position: relative;
+    color: #007bff; /* Bootstrap blue for clickable text */
+}
+
+summary::-webkit-details-marker {
+    display: none; /* Hide default marker (Chrome) */
+}
+
+summary::before { /* Custom marker */
+    content: '►'; /* Collapsed state */
+    position: absolute;
+    left: -5px; /* Adjust position */
+    font-size: 0.8em;
+    margin-right: 5px;
+    color: #6c757d;
+    transition: transform 0.2s ease-in-out;
+}
+
+details[open] summary::before {
+    transform: rotate(90deg); /* Expanded state */
+}
+
+details p#analysisSummary {
+    padding: 0 15px 15px 15px; /* Padding only for content */
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #495057;
+    border-top: 1px solid #dee2e6; /* Separator line */
+    padding-top: 10px;
+    margin-bottom: 0;
+}
+
+
+/* Error Message */
 #error {
     margin-top: 15px;
     font-weight: bold;
-}
-
-body.expanded {
-    width: 500px; /* Expanded width */
+    color: #dc3545; /* Bootstrap red for errors */
+    background-color: #f8d7da; /* Light red background */
+    border: 1px solid #f5c6cb;
+    padding: 10px 15px;
+    border-radius: 0.25rem;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
 }
