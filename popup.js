@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     analyzeButton.addEventListener('click', () => {
         console.log('Analyze button clicked'); // Placeholder for actual logic
         // Hide previous results/errors and show loading indicator
+        document.body.classList.remove('expanded'); // Collapse before analysis
         resultsDiv.style.display = 'none';
         errorDiv.style.display = 'none';
         loadingIndicator.style.display = 'block';
@@ -29,8 +30,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response && response.success) {
                 ethicsScoreSpan.textContent = response.score;
                 analysisSummaryP.textContent = response.summary;
+
+
                 resultsDiv.style.display = 'block';
                 errorDiv.style.display = 'none'; // Hide error div on success
+                document.body.classList.add('expanded'); // Expand on success
             } else {
                 // Handle errors reported by the background script
                 console.error("Analysis failed:", response ? response.error : "Unknown error");
@@ -43,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
         errorDiv.textContent = `Error: ${message}`;
         errorDiv.style.display = 'block';
         resultsDiv.style.display = 'none';
+        document.body.classList.remove('expanded'); // Collapse on error
         loadingIndicator.style.display = 'none';
         analyzeButton.disabled = false;
     }

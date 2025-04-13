@@ -1,6 +1,6 @@
 body {
     font-family: sans-serif;
-    width: 300px; /* Adjust width as needed */
+    width: 300px; /* Default width */
     padding: 10px;
     box-sizing: border-box; /* Include padding in width calculation */
 }
@@ -62,4 +62,8 @@ button:disabled {
 #error {
     margin-top: 15px;
     font-weight: bold;
+}
+
+body.expanded {
+    width: 500px; /* Expanded width */
 }
