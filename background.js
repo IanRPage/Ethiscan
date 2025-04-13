@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // 1. Get the current active tab
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs.length === 0) {
-                missingTabError = 'No active tab found';
+                const missingTabError = 'No active tab found';
                 console.error(missingTabError);
                 sendResponse({ success: false, error: missingTabError });
                 return;
@@ -35,32 +35,53 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                const extractedText = injectionResults[0].result;
-                console.log(`Extracted text length: ${extractedText.length}`);
-                if (extractedText.length < 100) { // Basic check for meaningful content
-                    console.warn("Extracted text seems too short.");
-                    // Optional: Send a warning back, or proceed anyway
-                    // sendResponse({ success: false, error: "Extracted text is very short. Is this the correct page?" });
-                    // return;
-                }
+                const extractedResult = injectionResults[0].result;
 
-
-                try {
-                    // 3. Send extracted text to Gemini API (using placeholder function for now)
-                    console.log("Sending text to analysis function...");
-                    const analysisResult = await analyzeTextWithGemini(extractedText);
-
-                    // 4. Process API response & 5. Send results back to popup
-                    console.log("Analysis successful:", analysisResult);
-                    sendResponse({
-                        success: true,
-                        score: analysisResult.score,
-                        summary: analysisResult.summary
-                    });
-
-                } catch (error) {
-                    console.error("Analysis failed:", error);
-                    sendResponse({ success: false, error: error.message || "Failed to analyze text." });
+                if (typeof extractedResult === 'object' && extractedResult.isRegistration) {
+                    console.log("Registration page detected. Fetching privacy policy from:", extractedResult.privacyUrl);
+                    try {
+                        const privacyResponse = await fetch(extractedResult.privacyUrl);
+                        if (!privacyResponse.ok) {
+                            throw new Error(`Failed to fetch privacy policy: ${privacyResponse.statusText}`);
+                        }
+                        const extractedText = await privacyResponse.text();
+                        console.log(`Fetched privacy policy text length: ${extractedText.length}`);
+                        // Continue by sending the privacy policy text for analysis
+                        console.log("Sending text to analysis function...");
+                        const analysisResult = await analyzeTextWithGemini(extractedText);
+                        console.log("Analysis successful:", analysisResult);
+                        sendResponse({
+                            success: true,
+                            score: analysisResult.score,
+                            summary: analysisResult.summary
+                        });
+                    } catch (fetchError) {
+                        console.error("Error fetching privacy policy:", fetchError);
+                        sendResponse({ success: false, error: fetchError.message });
+                    }
+                } else if (typeof extractedResult === 'string') {
+                    // Continue with the original logic using the extracted text from the page
+                    const extractedText = extractedResult;
+                    console.log(`Extracted text length: ${extractedText.length}`);
+                    if (extractedText.length < 100) {
+                        console.warn("Extracted text seems too short.");
+                    }
+                    try {
+                        console.log("Sending text to analysis function...");
+                        const analysisResult = await analyzeTextWithGemini(extractedText);
+                        console.log("Analysis successful:", analysisResult);
+                        sendResponse({
+                            success: true,
+                            score: analysisResult.score,
+                            summary: analysisResult.summary
+                        });
+                    } catch (error) {
+                        console.error("Analysis failed:", error);
+                        sendResponse({ success: false, error: error.message || "Failed to analyze text." });
+                    }
+                } else {
+                    console.error("Content script returned unexpected type.");
+                    sendResponse({ success: false, error: "Unexpected data format from content extraction." });
                 }
             });
         });
@@ -72,11 +93,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 console.log("Background service worker started.");
 
-// This function will be injected into the active tab
+// Modify extractTextFromPage to detect registration pages and extract privacy policy link
 function extractTextFromPage() {
-    // Simple extraction: get all text from the body
-    // More sophisticated extraction could target specific elements,
-    // remove boilerplate (headers/footers), or handle SPAs better.
+    // Check for a registration form indicator (adjust this selector as needed)
+    const formElement = document.querySelector('form');
+    if (formElement) {
+        // Look for a link that likely points to the privacy policy (case-insensitive search)
+        const privacyLink = document.querySelector('a[href*="privacy"]');
+        if (privacyLink) {
+            return {
+                isRegistration: true,
+                privacyUrl: privacyLink.href
+            };
+        }
+    }
+    // Fallback: return the full text from the page
     return document.body.innerText;
 }
 
@@ -119,8 +150,9 @@ async function parseGeneratedJSON(text) {
             console.error("Parsed JSON does not match expected format:", resultJson);
             throw new Error("API response JSON format is incorrect.");
         }
+
         // console.log("Parsed analysis:", resultJson);
-        return resultJson; // { score: number, summary: string }
+        return resultJson;
 
     } catch (parseError) {
         console.error("Failed to parse JSON from API response:", parseError, "Raw text:", text);
@@ -140,7 +172,8 @@ async function analyzeTextWithGemini(text) {
 
     // Define the Gemini API endpoint (using gemini-pro model)
     // Ensure your API key has access to this model.
-    const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
 
     // Construct the prompt asking for JSON output
     const prompt = `
@@ -210,7 +243,9 @@ Policy is somewhat clear, concise, and easily readable.
 Policy is not clear, concise, and easily readable.
 Rubric END.
 
-Provide ONLY a JSON object with the keys "score" (numerical value 1-5) and "summary" (1-2 paragraph text). Do not include any other text or markdown formatting.
+Aside from the rubric, scan the web for all databreaches reported in the past 6 months for this company. This will be included as part of a JSON object.
+
+Provide ONLY a JSON object with the keys "score" (numerical value 1-5), "summary" (1-2 paragraph text), "data_collection" (decimal value 0-1.25), "org_data_usage" (decimal value 0-1.25), "data_sharing" (decimal value 0-1.25), "user_controls_data" (decimal value 0-0.75), and "policy_clarity" (decimal value 0-0.5). Do not include any other text or markdown formatting.
 
      JSON object:\n\nDocument Text:\n${text}`;
 
