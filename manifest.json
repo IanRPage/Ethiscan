@@ -8,6 +8,11 @@
     "scripting",
     "storage"
   ],
+  "icons": {
+    "16": "EthiscanShield.png",
+    "48": "EthiscanShield.png",
+    "128": "EthiscanShield.png"
+  },
   "action": {
     "default_popup": "popup.html"
   },
