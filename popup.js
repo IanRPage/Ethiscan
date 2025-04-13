@@ -1,67 +1,56 @@
-// popup.js
-
-// Function to initialize the popup UI
 document.addEventListener('DOMContentLoaded', function() {
-    // Get the analyze button and results container
-    const analyzeButton = document.getElementById('analyze-button');
-    const resultsContainer = document.getElementById('results-container');
+    const analyzeButton = document.getElementById('analyzeButton');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const resultsDiv = document.getElementById('results');
+    const errorDiv = document.getElementById('error');
+    const ethicsScoreSpan = document.getElementById('ethicsScore');
+    const analysisSummaryP = document.getElementById('analysisSummary');
 
-    // Load the most recent analysis from storage
-    chrome.storage.local.get(['lastAnalysis'], function(result) {
-        if (result.lastAnalysis) {
-            displayResults(result.lastAnalysis);
-        }
-    });
+    analyzeButton.addEventListener('click', () => {
+        console.log('Analyze button clicked'); // Placeholder for actual logic
+        // Hide previous results/errors and show loading indicator
+        document.body.classList.remove('expanded'); // Collapse before analysis
+        resultsDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+        analyzeButton.disabled = true; // Disable button during analysis
 
-    // Add click event listener to the analyze button
-    analyzeButton.addEventListener('click', function() {
-        // Send a message to the content script to analyze the current page
-        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, { action: 'analyze' }, function(response) {
-                if (response) {
-                    // Store the analysis result in local storage
-                    chrome.storage.local.set({ lastAnalysis: response });
-                    // Display the results
-                    displayResults(response);
-                } else {
-                    resultsContainer.innerHTML = 'No Terms and Conditions found on this page.';
-                }
-            });
+        // Send message to background script to start analysis
+        chrome.runtime.sendMessage({ action: "analyzePage" }, (response) => {
+            loadingIndicator.style.display = 'none';
+            analyzeButton.disabled = false; // Re-enable button
+
+            if (chrome.runtime.lastError) {
+                // Handle errors like the background script not being available
+                console.error("Error sending message:", chrome.runtime.lastError.message);
+                showError(`Communication error: ${chrome.runtime.lastError.message}`);
+                return;
+            }
+
+            if (response && response.success) {
+                ethicsScoreSpan.textContent = response.score;
+                analysisSummaryP.textContent = response.summary;
+
+
+                resultsDiv.style.display = 'block';
+                errorDiv.style.display = 'none'; // Hide error div on success
+                document.body.classList.add('expanded'); // Expand on success
+            } else {
+                // Handle errors reported by the background script
+                console.error("Analysis failed:", response ? response.error : "Unknown error");
+                showError(response ? response.error : "An unknown error occurred during analysis.");
+            }
         });
     });
-});
 
-// Function to display the analysis results in the popup
-function displayResults(analysis) {
-    const resultsContainer = document.getElementById('results-container');
-    resultsContainer.innerHTML = '';
-
-    // Create elements for each category of the analysis
-    for (const category in analysis) {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.classList.add('category');
-
-        const title = document.createElement('h3');
-        title.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-        categoryDiv.appendChild(title);
-
-        const summary = document.createElement('p');
-        summary.textContent = analysis[category].summary;
-        categoryDiv.appendChild(summary);
-
-        const detailButton = document.createElement('button');
-        detailButton.textContent = 'View Details';
-        detailButton.addEventListener('click', function() {
-            alert(analysis[category].details);
-        });
-        categoryDiv.appendChild(detailButton);
-
-        resultsContainer.appendChild(categoryDiv);
+    function showError(message) {
+        errorDiv.textContent = `Error: ${message}`;
+        errorDiv.style.display = 'block';
+        resultsDiv.style.display = 'none';
+        document.body.classList.remove('expanded'); // Collapse on error
+        loadingIndicator.style.display = 'none';
+        analyzeButton.disabled = false;
     }
 
-    // Display overall privacy rating
-    const ratingDiv = document.createElement('div');
-    ratingDiv.classList.add('rating');
-    ratingDiv.textContent = `Overall Privacy Rating: ${analysis.rating}`;
-    resultsContainer.appendChild(ratingDiv);
-}
+    // Response from background script is handled in the sendMessage callback above
+});
